@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-
+#curl --fail --show-error --location https://neo4j.com/artifact.php?name=neo4j-community-2.1.7-unix.tar.gz -o neo4j-community-2.1.7-unix.tar.gz && tar -xf neo4j-community-2.1.7-unix.tar.gz && mv neo4j-community-2.1.7 neo4j-2.1.7 && rm *.tar.gz
 main() {
   clearArgs && \
     getArgs "$@" && \
@@ -39,9 +39,9 @@ getArgs() {
 }
 
 backupCurrentDatabase () {
-  echo "Backing up DB from $DB_SRC to /tmp/ ..."
-  tar -cf "/tmp/$(basename $DB_SRC).tar" "$DB_SRC"
-  echo "Backing up DB from $DB_SRC to /tmp/ ... Complete"
+  echo "Backing up DB from $DB_SRC to $(pwd)..."
+  tar -cf "$(basename $DB_SRC).tar" "$DB_SRC"
+  echo "Backing up DB from $DB_SRC to $(pwd)... Complete"
 }
 
 removeOrphanAssetSalesOfferNodes () {
