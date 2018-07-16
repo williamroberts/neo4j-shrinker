@@ -1,9 +1,10 @@
 #!/bin/bash
 set -euo pipefail
-#curl --fail --show-error --location https://neo4j.com/artifact.php?name=neo4j-community-2.1.7-unix.tar.gz -o neo4j-community-2.1.7-unix.tar.gz && tar -xf neo4j-community-2.1.7-unix.tar.gz && mv neo4j-community-2.1.7 neo4j-2.1.7 && rm *.tar.gz
+
 main() {
   clearArgs && \
     getArgs "$@" && \
+    installNeo4j2.1.7 && \
     backupCurrentDatabase && \
     removeOrphanAssetSalesOfferNodes && \
     removeDuplicateAssetSalesOfferNodes && \
@@ -11,7 +12,6 @@ main() {
 }
 
 clearArgs() {
-  unset NEO4J_SHELL_LOCATION
   unset DB_SRC
   unset DB_DEST
 }
@@ -21,9 +21,6 @@ getArgs() {
     case $opt in
       h)
         help
-        ;;
-      n)
-        NEO4J_SHELL_LOCATION=$OPTARG
         ;;
       s)
         DB_SRC=$OPTARG
@@ -38,6 +35,12 @@ getArgs() {
   done
 }
 
+installNeo4j2.1.7 () {
+  curl --fail --show-error --location https://neo4j.com/artifact.php?name=neo4j-community-2.1.7-unix.tar.gz -o neo4j-community-2.1.7-unix.tar.gz && \
+    tar -xf neo4j-community-2.1.7-unix.tar.gz && mv neo4j-community-2.1.7 neo4j-2.1.7 && \
+    rm neo4j-community-2.1.7-unix.tar.gz
+}
+
 backupCurrentDatabase () {
   echo "Backing up DB from $DB_SRC to $(pwd)..."
   tar -cf "$(basename $DB_SRC).tar" "$DB_SRC"
@@ -50,7 +53,7 @@ removeOrphanAssetSalesOfferNodes () {
   do
     echo
     echo "Removing Orphan AssetSalesOfferNodes. Loop: $LOOP of 100"
-    "$NEO4J_SHELL_LOCATION/neo4j-shell" -path "$DB_SRC" -c "MATCH (n:AssetSalesOffer) WHERE NOT ( (n:AssetSalesOffer)-[]-() ) WITH n LIMIT 500000 DELETE n;"
+    "./neo4j-2.1.7/neo4j-shell" -path "$DB_SRC" -c "MATCH (n:AssetSalesOffer) WHERE NOT ( (n:AssetSalesOffer)-[]-() ) WITH n LIMIT 500000 DELETE n;"
     sleep 5
   done
   echo "Looping though DB to remove orphan AssetSalesOffersNodes... Complete"
@@ -58,7 +61,7 @@ removeOrphanAssetSalesOfferNodes () {
 
 removeDuplicateAssetSalesOfferNodes () {
   echo "Removing duplicate AssetSalesOfferNodes..."
-  "$NEO4J_SHELL_LOCATION/neo4j-shell" -path "$DB_SRC" -c "MATCH (n:AssetSalesOffer)-[r]-(:AssetSalesHistory)-[]-(a:Asset) WHERE n.bidOrOfferId IS NULL AND a.assetStatus = 'SALES_IN_PROGRESS' DELETE r, n;"
+  "./neo4j-2.1.7/neo4j-shell" -path "$DB_SRC" -c "MATCH (n:AssetSalesOffer)-[r]-(:AssetSalesHistory)-[]-(a:Asset) WHERE n.bidOrOfferId IS NULL AND a.assetStatus = 'SALES_IN_PROGRESS' DELETE r, n;"
   echo "Removing duplicate AssetSalesOfferNodes... Complete"
 }
 
@@ -86,16 +89,14 @@ help () {
   echo ""
   echo "Example:"
   echo ""
-  echo "./$SCRIPT_NAME -n /var/lib/neo4j/bin -s /home/mijo/neo4j/assets -d /home/mijo/neo4j/assets_light"
+  echo "./$SCRIPT_NAME -s /home/mijo/neo4j/assets -d /home/mijo/neo4j/assets_light"
   echo ""
   echo "------------------------------------------------------------------------------------------------------------------"
   echo "| # | Arguments | Description                                                                                    |"
   echo "|---|-----------|------------------------------------------------------------------------------------------------|"
-  echo "| 1 |    -n     | (Required) The location of the neo4j-shell cli e.g. /var/lib/neo4j/bin                         |"
+  echo "| 1 |    -s     | (Required) The path to the source DB folder e.g. /home/mijo/neo4j/assets                       |"
   echo "|---|-----------|------------------------------------------------------------------------------------------------|"
-  echo "| 2 |    -s     | (Required) The path to the source DB folder e.g. /home/mijo/neo4j/assets                       |"
-  echo "|---|-----------|------------------------------------------------------------------------------------------------|"
-  echo "| 3 |    -d     | (Required) Use to skip tests during the Maven build. e.g /home/mijo/neo4j/assets_light         |"
+  echo "| 2 |    -d     | (Required) Use to skip tests during the Maven build. e.g /home/mijo/neo4j/assets_light         |"
   echo "------------------------------------------------------------------------------------------------------------------"
   echo ""
   exit 0
