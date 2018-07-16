@@ -53,7 +53,7 @@ removeOrphanAssetSalesOfferNodes () {
   do
     echo
     echo "Removing Orphan AssetSalesOfferNodes. Loop: $LOOP of 100"
-    "./neo4j-2.1.7/neo4j-shell" -path "$DB_SRC" -c "MATCH (n:AssetSalesOffer) WHERE NOT ( (n:AssetSalesOffer)-[]-() ) WITH n LIMIT 500000 DELETE n;"
+    "./neo4j-2.1.7/bin/neo4j-shell" -path "$DB_SRC" -c "MATCH (n:AssetSalesOffer) WHERE NOT ( (n:AssetSalesOffer)-[]-() ) WITH n LIMIT 500000 DELETE n;"
     sleep 5
   done
   echo "Looping though DB to remove orphan AssetSalesOffersNodes... Complete"
@@ -61,7 +61,7 @@ removeOrphanAssetSalesOfferNodes () {
 
 removeDuplicateAssetSalesOfferNodes () {
   echo "Removing duplicate AssetSalesOfferNodes..."
-  "./neo4j-2.1.7/neo4j-shell" -path "$DB_SRC" -c "MATCH (n:AssetSalesOffer)-[r]-(:AssetSalesHistory)-[]-(a:Asset) WHERE n.bidOrOfferId IS NULL AND a.assetStatus = 'SALES_IN_PROGRESS' DELETE r, n;"
+  "./neo4j-2.1.7/bin/neo4j-shell" -path "$DB_SRC" -c "MATCH (n:AssetSalesOffer)-[r]-(:AssetSalesHistory)-[]-(a:Asset) WHERE n.bidOrOfferId IS NULL AND a.assetStatus = 'SALES_IN_PROGRESS' DELETE r, n;"
   echo "Removing duplicate AssetSalesOfferNodes... Complete"
 }
 
